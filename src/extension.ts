@@ -6,6 +6,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(statusBar);
 
   const provider = new SidebarMarkdownNotesProvider(context.extensionUri, context, statusBar);
+  context.subscriptions.push(provider);
 
   context.subscriptions.push(vscode.window.registerWebviewViewProvider(SidebarMarkdownNotesProvider.viewId, provider));
 

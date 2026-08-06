@@ -13,18 +13,59 @@ interface NotesState {
   version: number;
 }
 
-export default class SidebarMarkdownNotesProvider implements vscode.WebviewViewProvider {
+export default class SidebarMarkdownNotesProvider implements vscode.WebviewViewProvider, vscode.Disposable {
   public static readonly viewId = 'sidebarMarkdownNotes.webview';
 
   private _view?: vscode.WebviewView;
 
   private config = getConfig();
 
+  private _watcher?: vscode.FileSystemWatcher;
+  private _pendingWrites = new Set<string>();
+
   constructor(
     private readonly _extensionUri: vscode.Uri,
     private readonly _context: vscode.ExtensionContext,
     private _statusBar?: vscode.StatusBarItem
-  ) {}
+  ) {
+    this._setupFileWatcher();
+  }
+
+  public dispose(): void {
+    this._watcher?.dispose();
+  }
+
+  private _setupFileWatcher(): void {
+    const dir = this.getStorageDirectory();
+    if (!dir) { return; }
+    this._createWatcherForDir(dir);
+  }
+
+  private _createWatcherForDir(dir: string): void {
+    this._watcher?.dispose();
+    const pattern = new vscode.RelativePattern(dir, 'page-*.md');
+    this._watcher = vscode.workspace.createFileSystemWatcher(pattern);
+    this._watcher.onDidChange(uri => this._onFileChanged(uri));
+  }
+
+  private _onFileChanged(uri: vscode.Uri): void {
+    const filePath = uri.fsPath;
+    if (this._pendingWrites.has(filePath)) {
+      this._pendingWrites.delete(filePath);
+      return;
+    }
+    // External change detected — reload the page content
+    const fileName = path.basename(filePath);
+    const match = fileName.match(/^page-(\d+)\.md$/);
+    if (!match) { return; }
+    const pageIndex = parseInt(match[1], 10) - 1;
+    try {
+      const content = fs.readFileSync(filePath, 'utf8');
+      if (this._view) {
+        this._view.webview.postMessage({ type: 'updatePage', pageIndex, content });
+      }
+    } catch { /* file may have been deleted */ }
+  }
 
   private getStorageDirectory(): string | undefined {
     const config = vscode.workspace.getConfiguration('sidebar-markdown-notes');
@@ -87,6 +128,7 @@ export default class SidebarMarkdownNotesProvider implements vscode.WebviewViewP
     // Write each page as a separate .md file
     for (let i = 0; i < state.pages.length; i++) {
       const filePath = path.join(dir, `page-${i + 1}.md`);
+      this._pendingWrites.add(filePath);
       fs.writeFileSync(filePath, state.pages[i] || '', 'utf8');
     }
 
@@ -105,6 +147,7 @@ export default class SidebarMarkdownNotesProvider implements vscode.WebviewViewP
   }
 
   public async reloadFromDisk(): Promise<void> {
+    this._setupFileWatcher();
     if (this._view) {
       const state = await this.loadStateFromDisk();
       if (state) {

@@ -283,6 +283,20 @@
         renderView();
         break;
       }
+      case 'updatePage': {
+        // A specific page was changed externally on disk
+        const { pageIndex, content } = message;
+        if (pageIndex >= 0 && pageIndex < currentState.pages.length) {
+          const newPages = [...currentState.pages];
+          newPages[pageIndex] = content;
+          currentState = { ...currentState, pages: newPages };
+          vscode.setState(currentState);
+          if (pageIndex === currentState.currentPage) {
+            renderView();
+          }
+        }
+        break;
+      }
     }
   });
 
