@@ -304,7 +304,8 @@ export default class SidebarMarkdownNotesProvider implements vscode.WebviewViewP
     const nonce = this._getNonce();
 
     const config = JSON.stringify({
-      leftMargin: this.config.leftMargin
+      leftMargin: this.config.leftMargin,
+      margin: this.config.margin
     });
 
     return `<!DOCTYPE html>
@@ -339,8 +340,16 @@ export default class SidebarMarkdownNotesProvider implements vscode.WebviewViewP
             const renderElement = document.getElementById('render');
             const editorElement = document.getElementById('content');
 
-            renderElement.style.paddingLeft = ${this.config.leftMargin === true ? '"20px"' : '"0px"'};
-            editorElement.style.paddingLeft = ${this.config.leftMargin === true ? '"20px"' : '"0px"'};
+            const effectiveLeftMargin = ${this.config.effectiveLeftMargin};
+            const allSidesMargin = ${this.config.effectiveMargin};
+            renderElement.style.paddingLeft = effectiveLeftMargin + 'px';
+            editorElement.style.paddingLeft = effectiveLeftMargin + 'px';
+            renderElement.style.paddingTop = allSidesMargin + 'px';
+            renderElement.style.paddingRight = allSidesMargin + 'px';
+            renderElement.style.paddingBottom = allSidesMargin + 'px';
+            editorElement.style.paddingTop = allSidesMargin + 'px';
+            editorElement.style.paddingRight = allSidesMargin + 'px';
+            editorElement.style.paddingBottom = allSidesMargin + 'px';
           })();
         </script>
         <script nonce="${nonce}" src="${lodashUri}"></script>

@@ -171,8 +171,14 @@
 				"properties": {
 					"sidebar-markdown-notes.leftMargin": {
 						"type": "boolean",
-						"default": false,
+						"default": true,
 						"description": "Whether or not a left margin should be added to the main view. To align it with other elements"
+					},
+					"sidebar-markdown-notes.margin": {
+						"type": "number",
+						"default": 12,
+						"minimum": 0,
+						"description": "Padding (in pixels) applied equally to all sides. If leftMargin is also enabled, the greater value is used for the left side."
 					},
 					"sidebar-markdown-notes.storageDirectory": {
 						"type": "string",
