@@ -1,32 +1,16 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import SidebarMarkdownNotesProvider from './webviewProvider';
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-  // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
-
   const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 1000);
   context.subscriptions.push(statusBar);
 
-  const provider = new SidebarMarkdownNotesProvider(context.extensionUri, statusBar);
-
-  // register some listener that make sure the status bar
-  // item always up-to-date
-  // context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(provider.updateStatusBar));
-  // context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(provider.updateStatusBar));
+  const provider = new SidebarMarkdownNotesProvider(context.extensionUri, context, statusBar);
 
   context.subscriptions.push(vscode.window.registerWebviewViewProvider(SidebarMarkdownNotesProvider.viewId, provider));
 
-  // The command has been defined in the package.json file
-  // Now provide the implementation of the command with registerCommand
-  // The commandId parameter must match the command field in package.json
   context.subscriptions.push(
     vscode.commands.registerCommand('sidebar-markdown-notes.togglePreview', () => {
-      // The code you place here will be executed every time your command is executed
       provider.togglePreview();
     })
   );
@@ -54,7 +38,54 @@ export function activate(context: vscode.ExtensionContext) {
       provider.exportPage();
     })
   );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('sidebar-markdown-notes.deletePage', () => {
+      provider.deletePage();
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('sidebar-markdown-notes.revealInFinder', () => {
+      provider.revealInExplorer();
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('sidebar-markdown-notes.revealInFileExplorer', () => {
+      provider.revealInExplorer();
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('sidebar-markdown-notes.setStorageDirectory', async () => {
+      const uris = await vscode.window.showOpenDialog({
+        canSelectFiles: false,
+        canSelectFolders: true,
+        canSelectMany: false,
+        openLabel: 'Select Notes Storage Directory'
+      });
+      if (uris && uris.length > 0) {
+        const config = vscode.workspace.getConfiguration('sidebar-markdown-notes');
+        await config.update('storageDirectory', uris[0].fsPath, vscode.ConfigurationTarget.Global);
+        vscode.window.showInformationMessage(`Notes will be stored in: ${uris[0].fsPath}`);
+        provider.reloadFromDisk();
+      }
+    })
+  );
+
+  // Prompt on first run if no storage directory is configured
+  const config = vscode.workspace.getConfiguration('sidebar-markdown-notes');
+  if (!config.get<string>('storageDirectory')) {
+    vscode.window.showInformationMessage(
+      'Sidebar Markdown Notes: Set a storage directory so your notes are saved to disk.',
+      'Choose Directory'
+    ).then(choice => {
+      if (choice === 'Choose Directory') {
+        vscode.commands.executeCommand('sidebar-markdown-notes.setStorageDirectory');
+      }
+    });
+  }
 }
 
-// this method is called when your extension is deactivated
 export function deactivate() {}

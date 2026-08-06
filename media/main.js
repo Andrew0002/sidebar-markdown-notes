@@ -27,13 +27,10 @@
     }, secondsToHide || 3000);
   };
 
-  const welcomeMessage =
-    '# Welcome to `sidebar-markdown-notes`\n\nStart by typing **markdown**.\n\nClick the `Toggle preview` button to view your notes\n\nAlso works with GitHub Flavored Markdown ✨✨\n- [ ] Start by  \n- [ ] creating your own  \n- [x] checklists!  \n\nOr any kind of markdown\n\n- Your imagination  \n- Is the limit';
-
   const initialState = {
     state: 'editor',
     currentPage: 0,
-    pages: [welcomeMessage],
+    pages: [''],
     version: 1
   };
 
@@ -137,8 +134,10 @@
   };
 
   const saveState = (newState) => {
-    // Save the state
+    // Save to webview state (for same-session persistence)
     vscode.setState(newState);
+    // Save to disk via extension
+    vscode.postMessage({ type: 'saveData', value: newState });
     // Updates current instance
     currentState = newState;
 
@@ -189,12 +188,9 @@
   };
 
   const exportPage = () => {
-    // Update state and get current page's content
     let newState = getUpdatedContent();
     saveState(newState);
-    const content = newState.pages[newState.currentPage];
-    // Reply to extension with the text
-    vscode.postMessage({ type: 'exportPage', value: content });
+    vscode.postMessage({ type: 'exportPage', currentPage: newState.currentPage });
   };
 
   const previousPage = () => {
@@ -219,14 +215,31 @@
         currentPage: newPageIndex
       };
 
-      if (!currentState.pages[newPageIndex]) {
-        newState = { ...newState, pages: [...newState.pages, `Page ${newPageIndex + 1}\n${welcomeMessage}`] };
+      if (newPageIndex >= newState.pages.length) {
+        newState = { ...newState, pages: [...newState.pages, ''] };
       }
 
       saveState(newState);
 
       updateStatusForSeconds(`$(file) Page ${newPageIndex + 1}`);
     }
+  };
+
+  const deletePage = () => {
+    const content = (currentState.pages[currentState.currentPage] || '').trim();
+    if (content !== '') {
+      log('Can only delete empty pages');
+      return;
+    }
+    if (currentState.pages.length <= 1) {
+      log('Cannot delete the last page');
+      return;
+    }
+    const newPages = [...currentState.pages];
+    newPages.splice(currentState.currentPage, 1);
+    const newPage = Math.min(currentState.currentPage, newPages.length - 1);
+    saveState({ ...currentState, pages: newPages, currentPage: newPage });
+    updateStatusForSeconds(`$(trash) Deleted page`);
   };
 
   // Handle messages sent from the extension to the webview
@@ -254,6 +267,22 @@
         exportPage();
         break;
       }
+      case 'deletePage': {
+        deletePage();
+        break;
+      }
+      case 'requestCurrentPage': {
+        vscode.postMessage({ type: 'revealCurrentPage', currentPage: currentState.currentPage });
+        break;
+      }
+      case 'loadData': {
+        // Loaded from disk by the extension
+        const loaded = message.value;
+        vscode.setState(loaded);
+        currentState = loaded;
+        renderView();
+        break;
+      }
     }
   });
 
@@ -267,6 +296,9 @@
   document.getElementById('text-input').addEventListener('input', () => {
     debouncedSaveContent();
   });
+
+  // Request state from disk (extension will reply with loadData if a storage directory is configured)
+  vscode.postMessage({ type: 'requestLoad' });
 
   // Runs the render for the first time
   renderView();

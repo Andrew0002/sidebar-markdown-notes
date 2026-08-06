@@ -1,8 +1,17 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
 
 import { getConfig } from './config';
+
+interface NotesState {
+  state: string;
+  currentPage: number;
+  pages: string[];
+  version: number;
+}
 
 export default class SidebarMarkdownNotesProvider implements vscode.WebviewViewProvider {
   public static readonly viewId = 'sidebarMarkdownNotes.webview';
@@ -11,33 +20,110 @@ export default class SidebarMarkdownNotesProvider implements vscode.WebviewViewP
 
   private config = getConfig();
 
-  constructor(private readonly _extensionUri: vscode.Uri, private _statusBar?: vscode.StatusBarItem) {}
+  constructor(
+    private readonly _extensionUri: vscode.Uri,
+    private readonly _context: vscode.ExtensionContext,
+    private _statusBar?: vscode.StatusBarItem
+  ) {}
 
-  /**
-   * Revolves a webview view.
-   *
-   * `resolveWebviewView` is called when a view first becomes visible. This may happen when the view is
-   * first loaded or when the user hides and then shows a view again.
-   *
-   * @param webviewView Webview view to restore. The provider should take ownership of this view. The
-   *    provider must set the webview's `.html` and hook up all webview events it is interested in.
-   * @param context Additional metadata about the view being resolved.
-   * @param token Cancellation token indicating that the view being provided is no longer needed.
-   *
-   * @return Optional thenable indicating that the view has been fully resolved.
-   */
+  private getStorageDirectory(): string | undefined {
+    const config = vscode.workspace.getConfiguration('sidebar-markdown-notes');
+    const dir = config.get<string>('storageDirectory', '');
+    return dir || undefined;
+  }
+
+  private async ensureStorageDirectory(): Promise<string | undefined> {
+    const dir = this.getStorageDirectory();
+    if (!dir) { return undefined; }
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    return dir;
+  }
+
+  public async loadStateFromDisk(): Promise<NotesState | undefined> {
+    const dir = this.getStorageDirectory();
+    if (!dir || !fs.existsSync(dir)) { return undefined; }
+
+    const stateFile = path.join(dir, '_state.json');
+    let currentPage = 0;
+    let viewState = 'editor';
+
+    if (fs.existsSync(stateFile)) {
+      try {
+        const meta = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+        currentPage = meta.currentPage || 0;
+        viewState = meta.state || 'editor';
+      } catch { /* ignore corrupt state file */ }
+    }
+
+    // Read all page-*.md files
+    const files = fs.readdirSync(dir).filter((f: string) => /^page-\d+\.md$/.test(f)).sort((a: string, b: string) => {
+      const numA = parseInt(a.match(/\d+/)![0], 10);
+      const numB = parseInt(b.match(/\d+/)![0], 10);
+      return numA - numB;
+    });
+
+    if (files.length === 0) { return undefined; }
+
+    const pages: string[] = [];
+    for (const file of files) {
+      const num = parseInt(file.match(/\d+/)![0], 10);
+      pages[num - 1] = fs.readFileSync(path.join(dir, file), 'utf8');
+    }
+
+    // Fill any gaps with empty strings
+    for (let i = 0; i < pages.length; i++) {
+      if (pages[i] === undefined) { pages[i] = ''; }
+    }
+
+    return { state: viewState, currentPage, pages, version: 1 };
+  }
+
+  public async saveStateToDisk(state: NotesState): Promise<void> {
+    const dir = await this.ensureStorageDirectory();
+    if (!dir) { return; }
+
+    // Write each page as a separate .md file
+    for (let i = 0; i < state.pages.length; i++) {
+      const filePath = path.join(dir, `page-${i + 1}.md`);
+      fs.writeFileSync(filePath, state.pages[i] || '', 'utf8');
+    }
+
+    // Remove any extra page files that no longer exist
+    const existing = fs.readdirSync(dir).filter((f: string) => /^page-\d+\.md$/.test(f));
+    for (const file of existing) {
+      const num = parseInt(file.match(/\d+/)![0], 10);
+      if (num > state.pages.length) {
+        fs.unlinkSync(path.join(dir, file));
+      }
+    }
+
+    // Write state metadata
+    const stateFile = path.join(dir, '_state.json');
+    fs.writeFileSync(stateFile, JSON.stringify({ currentPage: state.currentPage, state: state.state }), 'utf8');
+  }
+
+  public async reloadFromDisk(): Promise<void> {
+    if (this._view) {
+      const state = await this.loadStateFromDisk();
+      if (state) {
+        this._view.webview.postMessage({ type: 'loadData', value: state });
+      }
+    }
+  }
+
   public resolveWebviewView(webviewView: vscode.WebviewView) {
     this._view = webviewView;
 
     webviewView.webview.options = {
-      // Allow scripts in the webview
       enableScripts: true,
       localResourceRoots: [this._extensionUri]
     };
 
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-    webviewView.webview.onDidReceiveMessage((data) => {
+    webviewView.webview.onDidReceiveMessage(async (data: any) => {
       switch (data.type) {
         case 'log': {
           vscode.window.showInformationMessage(`${data.value}`);
@@ -47,20 +133,40 @@ export default class SidebarMarkdownNotesProvider implements vscode.WebviewViewP
           this.updateStatusBar(data.value);
           break;
         }
+        case 'saveData': {
+          await this.saveStateToDisk(data.value as NotesState);
+          break;
+        }
+        case 'requestLoad': {
+          const state = await this.loadStateFromDisk();
+          if (state) {
+            webviewView.webview.postMessage({ type: 'loadData', value: state });
+          }
+          break;
+        }
+        case 'revealCurrentPage': {
+          this.revealPageFile(data.currentPage);
+          break;
+        }
         case 'exportPage': {
-          vscode.workspace.openTextDocument({ language: 'markdown' }).then((a: vscode.TextDocument) => {
-            vscode.window.showTextDocument(a, 1, false).then((e) => {
-              e.edit((edit) => {
-                edit.insert(new vscode.Position(0, 0), data.value);
-              });
-            });
-          });
+          const dir = this.getStorageDirectory();
+          if (dir && data.currentPage !== undefined) {
+            const filePath = path.join(dir, `page-${data.currentPage + 1}.md`);
+            if (fs.existsSync(filePath)) {
+              const doc = await vscode.workspace.openTextDocument(filePath);
+              await vscode.window.showTextDocument(doc, 1, false);
+            } else {
+              vscode.window.showWarningMessage('No file on disk for this page yet. Save some notes first.');
+            }
+          } else {
+            vscode.window.showWarningMessage('Set a storage directory first (Command: "Set storage directory").');
+          }
           break;
         }
       }
     });
 
-    vscode.workspace.onDidChangeConfiguration((e) => {
+    vscode.workspace.onDidChangeConfiguration((e: vscode.ConfigurationChangeEvent) => {
       if (e.affectsConfiguration('sidebar-markdown-notes')) {
         this.config = getConfig();
         webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
@@ -95,6 +201,32 @@ export default class SidebarMarkdownNotesProvider implements vscode.WebviewViewP
   public exportPage() {
     if (this._view) {
       this._view.webview.postMessage({ type: 'exportPage' });
+    }
+  }
+
+  public deletePage() {
+    if (this._view) {
+      this._view.webview.postMessage({ type: 'deletePage' });
+    }
+  }
+
+  public revealInExplorer() {
+    if (this._view) {
+      this._view.webview.postMessage({ type: 'requestCurrentPage' });
+    }
+  }
+
+  private revealPageFile(pageIndex: number) {
+    const dir = this.getStorageDirectory();
+    if (!dir) {
+      vscode.window.showWarningMessage('Set a storage directory first (Command: "Set storage directory").');
+      return;
+    }
+    const filePath = path.join(dir, `page-${pageIndex + 1}.md`);
+    if (fs.existsSync(filePath)) {
+      vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(filePath));
+    } else {
+      vscode.window.showWarningMessage('No file on disk for this page yet. Save some notes first.');
     }
   }
 
