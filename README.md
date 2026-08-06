@@ -1,3 +1,13 @@
+## Fork Notes
+
+This is a fork of AssisrMatheus's project for my personal use.
+
+### Fork Changes
+- Notes are saved to individual markdown files in the filesystem rather than the WebView state to prevent data loss
+- Extension will prompt for save directory on first launch. Setting name is `sidebar-markdown-notes.storageDirectory`
+
+---
+
 # sidebar-markdown-notes
 
 [![Marketplace Version](images/icon.png 'Current Release')](https://marketplace.visualstudio.com/items?itemName=assisrMatheus.sidebar-markdown-notes)
