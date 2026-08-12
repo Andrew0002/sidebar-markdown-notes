@@ -299,6 +299,7 @@ export default class SidebarMarkdownNotesProvider implements vscode.WebviewViewP
     const markdownCss = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'markdown.css'));
     const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'vscode.css'));
     const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'main.css'));
+    const highlightThemeUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'highlight-theme.css'));
 
     // Use a nonce to only allow a specific script to be run.
     const nonce = this._getNonce();
@@ -319,13 +320,14 @@ export default class SidebarMarkdownNotesProvider implements vscode.WebviewViewP
 				-->
 				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${
           webview.cspSource
-        }; script-src 'nonce-${nonce}';">
+        } https:; script-src 'nonce-${nonce}' https://cdnjs.cloudflare.com;">
 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
         <link href="${styleResetUri}" rel="stylesheet">
         <link href="${styleVSCodeUri}" rel="stylesheet">
         <link href="${markdownCss}" rel="stylesheet">
+        <link href="${highlightThemeUri}" rel="stylesheet">
 				<link href="${styleMainUri}" rel="stylesheet">
 
 				<title>Sidebar markdown notes</title>
@@ -355,6 +357,7 @@ export default class SidebarMarkdownNotesProvider implements vscode.WebviewViewP
         <script nonce="${nonce}" src="${lodashUri}"></script>
         <script nonce="${nonce}" src="${purifyUri}"></script>
         <script nonce="${nonce}" src="${markedUri}"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
         <script nonce="${nonce}">var config = ${config};</script>
 				<script nonce="${nonce}" src="${scriptUri}"></script>
 			</body>

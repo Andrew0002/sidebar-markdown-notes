@@ -37,10 +37,26 @@
   // Gets the state or creates a new one if it doesn't exist
   let currentState = vscode.getState() || initialState;
 
-  // Set the options for the maked markdown parser
+  // Define a highlight function that uses highlight.js if available
+  const highlightCode = (code, lang) => {
+    if (typeof hljs !== 'undefined') {
+      try {
+        if (lang && hljs.getLanguage(lang)) {
+          return hljs.highlight(code, { language: lang }).value;
+        }
+        return hljs.highlightAuto(code).value;
+      } catch (e) {
+        return code;
+      }
+    }
+    return code;
+  };
+
+  // Set the options for the marked markdown parser
   marked.setOptions({
     gfm: true,
-    breaks: true
+    breaks: true,
+    highlight: highlightCode
   });
 
   // Creates custom renderers for the marked markdown
@@ -81,25 +97,53 @@
         }
         editorElement.classList.add('hidden');
 
-        document.querySelectorAll(`input[type='checkbox']`).forEach((check) => {
-          // So we can lookup the checkbox in the markdown content
-          const content = check.parentElement.textContent.trim();
-          const getIsChecked = () => currentState.pages[currentState.currentPage].includes(`- [x] ${content}`);
+        document.querySelectorAll(`input[type='checkbox']`).forEach((check, index) => {
+          // Extract only the direct text content (not nested elements)
+          let itemText = '';
+          for (let node of check.parentElement.childNodes) {
+            if (node.nodeType === Node.TEXT_NODE) {
+              itemText += node.textContent;
+            }
+          }
+          const itemContent = itemText.trim();
+          
+          // Find the corresponding line in markdown by looking for checkbox syntax
+          const markdownContent = currentState.pages[currentState.currentPage];
+          const lines = markdownContent.split('\n');
+          let matchedLineIndex = -1;
+          
+          // Search for a line that matches this checkbox
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            // Match both checked and unchecked checkbox patterns
+            if ((line.includes('- [x]') || line.includes('- [ ]')) && line.includes(itemContent)) {
+              matchedLineIndex = i;
+              break;
+            }
+          }
+          
+          const getIsChecked = () => {
+            if (matchedLineIndex < 0) return false;
+            return lines[matchedLineIndex]?.includes('- [x]') || false;
+          };
 
           // Ensure the checkbox state matches what is in the latest markdown
           check.checked = getIsChecked();
 
           check.addEventListener('click', () => {
-            const checked = getIsChecked();
-
-            // Update the markdown to use the new checked state
-            // Best to just rely on the markdown as the source of truth rather
-            // than trying to juggle some internal state for the checkbox
-            const newPageContent = checked
-              ? // Was checked - should now uncheck
-                currentState.pages[currentState.currentPage].replaceAll(`- [x] ${content}`, `- [ ] ${content}`)
-              : // Was not checked - should now check
-                currentState.pages[currentState.currentPage].replaceAll(`- [ ] ${content}`, `- [x] ${content}`);
+            const isCurrentlyChecked = getIsChecked();
+            const currentLine = lines[matchedLineIndex];
+            
+            if (!currentLine) return;
+            
+            // Toggle the checkbox in the line
+            const updatedLine = isCurrentlyChecked
+              ? currentLine.replace('- [x]', '- [ ]')
+              : currentLine.replace('- [ ]', '- [x]');
+            
+            // Update only the specific line
+            lines[matchedLineIndex] = updatedLine;
+            const newPageContent = lines.join('\n');
 
             let newState = {
               ...currentState,

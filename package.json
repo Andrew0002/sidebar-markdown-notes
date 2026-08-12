@@ -190,9 +190,10 @@
 		]
 	},
 	"scripts": {
-		"vscode:prepublish": "NODE_OPTIONS=--openssl-legacy-provider webpack --mode production",
-		"webpack": "NODE_OPTIONS=--openssl-legacy-provider webpack --mode development",
-		"webpack-dev": "NODE_OPTIONS=--openssl-legacy-provider webpack --mode development --watch",
+		"vscode:prepublish": "NODE_OPTIONS=--openssl-legacy-provider npm run copy-deps && webpack --mode production",
+		"copy-deps": "node scripts/copy-deps.js",
+		"webpack": "NODE_OPTIONS=--openssl-legacy-provider npm run copy-deps && webpack --mode development",
+		"webpack-dev": "NODE_OPTIONS=--openssl-legacy-provider npm run copy-deps && webpack --mode development --watch",
 		"test-compile": "tsc -p ./",
 		"compile": "tsc -p ./",
 		"lint": "eslint src --ext ts",
@@ -226,6 +227,7 @@
 	},
 	"dependencies": {
 		"dompurify": "^3.4.13",
+		"highlight.js": "^11.12.0",
 		"lodash": "^4.17.20",
 		"marked": "^18.0.9"
 	}

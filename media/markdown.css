@@ -228,14 +228,28 @@ pre code {
   tab-size: 4;
 }
 
+code {
+  background-color: var(--vscode-textCodeBlock-background);
+  color: var(--vscode-editor-foreground);
+  padding: 2px 6px;
+  border-radius: 2px;
+  font-size: 0.9em;
+}
+
+pre code {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
 /** Theming */
 
 .vscode-light pre {
-  background-color: rgba(220, 220, 220, 0.4);
+  background-color: rgba(220, 220, 220, 0.7);
 }
 
 .vscode-dark pre {
-  background-color: rgba(10, 10, 10, 0.4);
+  background-color: rgba(20, 20, 20, 0.8);
 }
 
 .vscode-high-contrast pre {
