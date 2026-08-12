@@ -5,6 +5,9 @@ This is a fork of AssisrMatheus's project for my personal use.
 ### Fork Changes
 - Notes are saved to individual markdown files in the filesystem rather than the WebView state to prevent data loss
 - Extension will prompt for save directory on first launch. Setting name is `sidebar-markdown-notes.storageDirectory`
+- ToDo checkboxes work reliably
+- ToDo checkboxes now respect indent level
+- Added Highlight.js for syntax highlighting of code blocks. 
 
 ---
 
