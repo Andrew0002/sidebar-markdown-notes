@@ -76,6 +76,28 @@
   // Use the created renderer
   marked.use({ renderer });
 
+  const taskItemPattern = /^(\s*)([-+*]|\d+[.)])\s+\[([ xX])\](\s+.*)?$/;
+
+  const getTaskLineIndexByOrdinal = (markdown, taskOrdinal) => {
+    const lines = markdown.split('\n');
+    let foundTaskCount = 0;
+
+    for (let i = 0; i < lines.length; i++) {
+      if (taskItemPattern.test(lines[i])) {
+        if (foundTaskCount === taskOrdinal) {
+          return i;
+        }
+        foundTaskCount += 1;
+      }
+    }
+
+    return -1;
+  };
+
+  const isTaskLineChecked = (line) => /\[[xX]\]/.test(line);
+
+  const toggleTaskLine = (line, checked) => line.replace(/\[[ xX]\]/, checked ? '[x]' : '[ ]');
+
   // This method will render the webview
   const renderView = () => {
     // Grabs the elements
@@ -97,55 +119,34 @@
         }
         editorElement.classList.add('hidden');
 
-        document.querySelectorAll(`input[type='checkbox']`).forEach((check, index) => {
-          // Extract only the direct text content (not nested elements)
-          let itemText = '';
-          for (let node of check.parentElement.childNodes) {
-            if (node.nodeType === Node.TEXT_NODE) {
-              itemText += node.textContent;
-            }
-          }
-          const itemContent = itemText.trim();
-          
-          // Find the corresponding line in markdown by looking for checkbox syntax
-          const markdownContent = currentState.pages[currentState.currentPage];
-          const lines = markdownContent.split('\n');
-          let matchedLineIndex = -1;
-          
-          // Search for a line that matches this checkbox
-          for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            // Match both checked and unchecked checkbox patterns
-            if ((line.includes('- [x]') || line.includes('- [ ]')) && line.includes(itemContent)) {
-              matchedLineIndex = i;
-              break;
-            }
-          }
-          
-          const getIsChecked = () => {
-            if (matchedLineIndex < 0) return false;
-            return lines[matchedLineIndex]?.includes('- [x]') || false;
-          };
+        document.querySelectorAll(`input[type='checkbox']`).forEach((check, taskOrdinal) => {
+          const initialMarkdown = currentState.pages[currentState.currentPage] || '';
+          const initialLines = initialMarkdown.split('\n');
+          const initialLineIndex = getTaskLineIndexByOrdinal(initialMarkdown, taskOrdinal);
 
-          // Ensure the checkbox state matches what is in the latest markdown
-          check.checked = getIsChecked();
+          if (initialLineIndex >= 0) {
+            check.checked = isTaskLineChecked(initialLines[initialLineIndex] || '');
+          }
 
           check.addEventListener('click', () => {
-            const isCurrentlyChecked = getIsChecked();
-            const currentLine = lines[matchedLineIndex];
-            
-            if (!currentLine) return;
-            
-            // Toggle the checkbox in the line
-            const updatedLine = isCurrentlyChecked
-              ? currentLine.replace('- [x]', '- [ ]')
-              : currentLine.replace('- [ ]', '- [x]');
-            
-            // Update only the specific line
-            lines[matchedLineIndex] = updatedLine;
+            const markdownContent = currentState.pages[currentState.currentPage] || '';
+            const lines = markdownContent.split('\n');
+            const taskLineIndex = getTaskLineIndexByOrdinal(markdownContent, taskOrdinal);
+
+            if (taskLineIndex < 0) {
+              return;
+            }
+
+            const currentLine = lines[taskLineIndex];
+            if (!currentLine) {
+              return;
+            }
+
+            const nextChecked = !isTaskLineChecked(currentLine);
+            lines[taskLineIndex] = toggleTaskLine(currentLine, nextChecked);
             const newPageContent = lines.join('\n');
 
-            let newState = {
+            const newState = {
               ...currentState,
               pages: [
                 ...currentState.pages.slice(0, currentState.currentPage),
