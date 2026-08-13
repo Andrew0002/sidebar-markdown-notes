@@ -1,90 +1,209 @@
+/* Theme-aware highlight.js styles that follow the VS Code color theme.
+   Uses Dark+ / Light+ token palettes keyed off the body class. */
+
 pre code.hljs {
   display: block;
   overflow-x: auto;
-  padding: 1em
+  padding: 1em;
 }
 code.hljs {
-  padding: 3px 5px
+  padding: 3px 5px;
 }
-/*
 
-Atom One Dark by Daniel Gamage
-Original One Dark Syntax theme from https://github.com/atom/one-dark-syntax
-
-base:    #282c34
-mono-1:  #abb2bf
-mono-2:  #818896
-mono-3:  #5c6370
-hue-1:   #56b6c2
-hue-2:   #61aeee
-hue-3:   #c678dd
-hue-4:   #98c379
-hue-5:   #e06c75
-hue-5-2: #be5046
-hue-6:   #d19a66
-hue-6-2: #e6c07b
-
-*/
 .hljs {
-  color: #abb2bf;
-  background: #282c34
+  color: var(--vscode-editor-foreground);
+  background: var(--vscode-editor-background);
 }
-.hljs-comment,
-.hljs-quote {
-  color: #5c6370;
-  font-style: italic
+
+.hljs-emphasis { font-style: italic; }
+.hljs-strong   { font-weight: bold; }
+.hljs-link     { text-decoration: underline; }
+
+/* ── Dark themes (matches VS Code Dark+) ── */
+
+.vscode-dark .hljs-comment,
+.vscode-dark .hljs-quote {
+  color: #6A9955;
+  font-style: italic;
 }
-.hljs-doctag,
-.hljs-keyword,
-.hljs-formula {
-  color: #c678dd
+
+.vscode-dark .hljs-keyword,
+.vscode-dark .hljs-doctag,
+.vscode-dark .hljs-formula {
+  color: #569CD6;
 }
-.hljs-section,
-.hljs-name,
-.hljs-selector-tag,
-.hljs-deletion,
-.hljs-subst {
-  color: #e06c75
+
+.vscode-dark .hljs-section,
+.vscode-dark .hljs-name,
+.vscode-dark .hljs-selector-tag,
+.vscode-dark .hljs-deletion,
+.vscode-dark .hljs-subst {
+  color: #D16969;
 }
-.hljs-literal {
-  color: #56b6c2
+
+.vscode-dark .hljs-literal {
+  color: #569CD6;
 }
-.hljs-string,
-.hljs-regexp,
-.hljs-addition,
-.hljs-attribute,
-.hljs-meta .hljs-string {
-  color: #98c379
+
+.vscode-dark .hljs-string,
+.vscode-dark .hljs-regexp,
+.vscode-dark .hljs-addition,
+.vscode-dark .hljs-attribute,
+.vscode-dark .hljs-meta .hljs-string {
+  color: #CE9178;
 }
-.hljs-attr,
-.hljs-variable,
-.hljs-template-variable,
-.hljs-type,
-.hljs-selector-class,
-.hljs-selector-attr,
-.hljs-selector-pseudo,
-.hljs-number {
-  color: #d19a66
+
+.vscode-dark .hljs-attr,
+.vscode-dark .hljs-variable,
+.vscode-dark .hljs-template-variable,
+.vscode-dark .hljs-selector-class,
+.vscode-dark .hljs-selector-attr,
+.vscode-dark .hljs-selector-pseudo {
+  color: #9CDCFE;
 }
-.hljs-symbol,
-.hljs-bullet,
-.hljs-link,
-.hljs-meta,
-.hljs-selector-id,
-.hljs-title {
-  color: #61aeee
+
+.vscode-dark .hljs-type,
+.vscode-dark .hljs-built_in,
+.vscode-dark .hljs-title.class_,
+.vscode-dark .hljs-class .hljs-title {
+  color: #4EC9B0;
 }
-.hljs-built_in,
-.hljs-title.class_,
-.hljs-class .hljs-title {
-  color: #e6c07b
+
+.vscode-dark .hljs-number {
+  color: #B5CEA8;
 }
-.hljs-emphasis {
-  font-style: italic
+
+.vscode-dark .hljs-symbol,
+.vscode-dark .hljs-bullet,
+.vscode-dark .hljs-link,
+.vscode-dark .hljs-meta,
+.vscode-dark .hljs-selector-id,
+.vscode-dark .hljs-title {
+  color: #DCDCAA;
 }
-.hljs-strong {
-  font-weight: bold
+
+/* ── Light themes (matches VS Code Light+) ── */
+
+.vscode-light .hljs-comment,
+.vscode-light .hljs-quote {
+  color: #008000;
+  font-style: italic;
 }
-.hljs-link {
-  text-decoration: underline
+
+.vscode-light .hljs-keyword,
+.vscode-light .hljs-doctag,
+.vscode-light .hljs-formula {
+  color: #0000FF;
+}
+
+.vscode-light .hljs-section,
+.vscode-light .hljs-name,
+.vscode-light .hljs-selector-tag,
+.vscode-light .hljs-deletion,
+.vscode-light .hljs-subst {
+  color: #800000;
+}
+
+.vscode-light .hljs-literal {
+  color: #0000FF;
+}
+
+.vscode-light .hljs-string,
+.vscode-light .hljs-regexp,
+.vscode-light .hljs-addition,
+.vscode-light .hljs-attribute,
+.vscode-light .hljs-meta .hljs-string {
+  color: #A31515;
+}
+
+.vscode-light .hljs-attr,
+.vscode-light .hljs-variable,
+.vscode-light .hljs-template-variable,
+.vscode-light .hljs-selector-class,
+.vscode-light .hljs-selector-attr,
+.vscode-light .hljs-selector-pseudo {
+  color: #001080;
+}
+
+.vscode-light .hljs-type,
+.vscode-light .hljs-built_in,
+.vscode-light .hljs-title.class_,
+.vscode-light .hljs-class .hljs-title {
+  color: #267F99;
+}
+
+.vscode-light .hljs-number {
+  color: #098658;
+}
+
+.vscode-light .hljs-symbol,
+.vscode-light .hljs-bullet,
+.vscode-light .hljs-link,
+.vscode-light .hljs-meta,
+.vscode-light .hljs-selector-id,
+.vscode-light .hljs-title {
+  color: #795E26;
+}
+
+/* ── High contrast ── */
+
+.vscode-high-contrast .hljs-comment,
+.vscode-high-contrast .hljs-quote {
+  color: #7CA668;
+  font-style: italic;
+}
+
+.vscode-high-contrast .hljs-keyword,
+.vscode-high-contrast .hljs-doctag,
+.vscode-high-contrast .hljs-formula {
+  color: #569CD6;
+}
+
+.vscode-high-contrast .hljs-section,
+.vscode-high-contrast .hljs-name,
+.vscode-high-contrast .hljs-selector-tag,
+.vscode-high-contrast .hljs-deletion,
+.vscode-high-contrast .hljs-subst {
+  color: #D16969;
+}
+
+.vscode-high-contrast .hljs-literal {
+  color: #569CD6;
+}
+
+.vscode-high-contrast .hljs-string,
+.vscode-high-contrast .hljs-regexp,
+.vscode-high-contrast .hljs-addition,
+.vscode-high-contrast .hljs-attribute,
+.vscode-high-contrast .hljs-meta .hljs-string {
+  color: #CE9178;
+}
+
+.vscode-high-contrast .hljs-attr,
+.vscode-high-contrast .hljs-variable,
+.vscode-high-contrast .hljs-template-variable,
+.vscode-high-contrast .hljs-selector-class,
+.vscode-high-contrast .hljs-selector-attr,
+.vscode-high-contrast .hljs-selector-pseudo {
+  color: #9CDCFE;
+}
+
+.vscode-high-contrast .hljs-type,
+.vscode-high-contrast .hljs-built_in,
+.vscode-high-contrast .hljs-title.class_,
+.vscode-high-contrast .hljs-class .hljs-title {
+  color: #4EC9B0;
+}
+
+.vscode-high-contrast .hljs-number {
+  color: #B5CEA8;
+}
+
+.vscode-high-contrast .hljs-symbol,
+.vscode-high-contrast .hljs-bullet,
+.vscode-high-contrast .hljs-link,
+.vscode-high-contrast .hljs-meta,
+.vscode-high-contrast .hljs-selector-id,
+.vscode-high-contrast .hljs-title {
+  color: #DCDCAA;
 }

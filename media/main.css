@@ -11,19 +11,17 @@ body {
   width: 100%;
 }
 
-.todoList {
-  list-style: none;
+li.todoItem::before {
+  content: none !important;
 }
 
-.todoList li {
-  margin-left: 1.5em;
-  padding-left: 0.25em;
-}
-
-.todoList input[type="checkbox"] {
-  margin-right: 0.5em;
-  margin-left: -1.75em;
-  vertical-align: middle;
+li.todoItem input[type="checkbox"] {
+  position: absolute;
+  left: 0;
+  top: 0.25em;
+  margin: 0;
+  width: 0.8em;
+  height: 0.8em;
 }
 
 .hidden {

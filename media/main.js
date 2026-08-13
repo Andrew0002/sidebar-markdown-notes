@@ -62,11 +62,11 @@
   // Creates custom renderers for the marked markdown
   const renderer = {
     // Ref: https://github.com/markedjs/marked/blob/master/src/Renderer.js
-    list(body, ordered, start) {
-      const type = ordered ? 'ol' : 'ul',
-        startatt = ordered && start !== 1 ? ' start="' + start + '"' : '',
-        hasTodo = body.match(/checkbox/i) ? ' class="todoList"' : ''; // If there's a checkbox, adds a "todoList" class
-      return '<' + type + startatt + hasTodo + '>\n' + body + '</' + type + '>\n';
+    listitem(text, task, checked) {
+      if (task) {
+        return '<li class="todoItem">' + text + '</li>\n';
+      }
+      return '<li>' + text + '</li>\n';
     },
     checkbox(checked) {
       return '<input ' + (checked ? 'checked="" ' : '') + 'type="checkbox"' + (this.options.xhtml ? ' /' : '') + '> ';

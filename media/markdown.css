@@ -177,6 +177,73 @@ p {
 ul,
 ol {
   margin-bottom: 0.7em;
+  padding-left: 1.4em;
+}
+
+li > ul,
+li > ol {
+  margin-top: 0.15em;
+  margin-bottom: 0;
+  padding-left: 1.4em;
+}
+
+li {
+  margin-bottom: 0.1em;
+}
+
+/* --- Unordered list markers (office-suite style per level) --- */
+ul:not(.todoList) {
+  list-style: none;
+}
+
+ul:not(.todoList) > li {
+  position: relative;
+  padding-left: 1em;
+}
+
+ul:not(.todoList) > li::before {
+  position: absolute;
+  left: 0;
+  top: 0;
+  line-height: inherit;
+  text-align: center;
+  width: 0.8em;
+  color: inherit;
+}
+
+/* Level 1: filled disc */
+ul:not(.todoList) > li::before {
+  content: '\25CF';
+  font-size: 0.55em;
+  top: 0.55em;
+}
+
+/* Level 2: open circle */
+ul:not(.todoList) > li > ul:not(.todoList) > li::before {
+  content: '\25CB';
+  font-size: 0.55em;
+  top: 0.55em;
+}
+
+/* Level 3: filled square */
+ul:not(.todoList) > li > ul:not(.todoList) > li > ul:not(.todoList) > li::before {
+  content: '\25A0';
+  font-size: 0.5em;
+  top: 0.55em;
+}
+
+/* Level 4: en dash */
+ul:not(.todoList) > li > ul:not(.todoList) > li > ul:not(.todoList) > li > ul:not(.todoList) > li::before {
+  content: '\2013';
+  font-size: 0.75em;
+  top: 0.15em;
+}
+
+/* Level 5+: filled disc (cycle restarts) */
+ul:not(.todoList) > li > ul:not(.todoList) > li > ul:not(.todoList) > li > ul:not(.todoList) > li > ul:not(.todoList) > li::before {
+  content: '\25CF';
+  font-size: 0.55em;
+  top: 0.55em;
 }
 
 hr {
@@ -214,9 +281,9 @@ table > tbody > tr + tr > td {
 }
 
 blockquote {
-  margin: 0 7px 0 5px;
-  padding: 0 16px 0 10px;
-  border-left-width: 5px;
+  margin: 0 0 0 1px;
+  padding: 0 0 0 8px;
+  border-left-width: 2px;
   border-left-style: solid;
 }
 

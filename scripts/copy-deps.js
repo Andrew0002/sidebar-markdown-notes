@@ -21,13 +21,4 @@ if (fs.existsSync(hlSrc)) {
   console.warn('✗ highlight.js not found in node_modules');
 }
 
-// Copy a highlight.js theme (using atom-one-dark for dark backgrounds)
-const themeSrc = path.join(__dirname, '../node_modules/highlight.js/styles/atom-one-dark.css');
-const themeDest = path.join(__dirname, '../media/highlight-theme.css');
-
-if (fs.existsSync(themeSrc)) {
-  fs.copyFileSync(themeSrc, themeDest);
-  console.log('✓ Copied highlight.js theme to media');
-} else {
-  console.warn('✗ highlight.js theme not found');
-}
+// highlight-theme.css is maintained manually to follow the VS Code theme
