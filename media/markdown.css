@@ -16,8 +16,9 @@ body {
     'Droid Sans',
     sans-serif
   );
-  font-size: var(--markdown-font-size, 14px);
-  line-height: var(--markdown-line-height, 22px);
+  font-size: var(--markdown-font-size, var(--vscode-font-size, 13px));
+  line-height: var(--markdown-line-height, 1.45);
+  color: var(--vscode-sideBar-foreground, var(--vscode-foreground));
   word-wrap: break-word;
 }
 
@@ -42,6 +43,30 @@ h5,
 h6 {
   font-weight: normal;
   margin-bottom: 0.2em;
+}
+
+h1 {
+  font-size: 1.35em;
+}
+
+h2 {
+  font-size: 1.2em;
+}
+
+h3 {
+  font-size: 1.1em;
+}
+
+h4 {
+  font-size: 1em;
+}
+
+h5 {
+  font-size: 0.95em;
+}
+
+h6 {
+  font-size: 0.9em;
 }
 
 #code-csp-warning {
@@ -229,7 +254,7 @@ pre code {
 }
 
 code {
-  background-color: var(--vscode-textCodeBlock-background);
+  background-color: var(--vscode-editor-background);
   color: var(--vscode-editor-foreground);
   padding: 2px 6px;
   border-radius: 2px;
@@ -245,7 +270,7 @@ pre code {
 /** Theming */
 
 pre {
-  background-color: var(--vscode-textCodeBlock-background);
+  background-color: var(--vscode-editor-background);
 }
 
 .vscode-high-contrast h1 {

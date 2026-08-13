@@ -7,8 +7,8 @@
 }
 
 body {
-  color: var(--vscode-foreground);
-  font-size: var(--vscode-font-size);
+  color: var(--vscode-sideBar-foreground, var(--vscode-foreground));
+  font-size: var(--vscode-font-size, 13px);
   font-weight: var(--vscode-font-weight);
   font-family: var(--vscode-font-family);
   background-color: var(--vscode-sideBar-background);
